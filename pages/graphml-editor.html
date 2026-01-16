@@ -1,0 +1,930 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editor GraphML pentru Construcții</title>
+    <link rel="stylesheet" href="../assets/css/style.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            height: 100vh;
+            background: #f5f5f5;
+        }
+
+        main {
+            display: flex;
+            flex: 1;
+            min-height: auto;
+            padding: 0;
+            margin: 0;
+        }
+
+        .editor-container {
+            display: flex;
+            flex: 1;
+            height: calc(100vh - 60px);
+        }
+
+        #sidebar {
+            width: 260px;
+            background: white;
+            padding: 20px;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+            overflow-y: auto;
+        }
+
+        #sidebar h2 {
+            font-size: 20px;
+            margin-bottom: 20px;
+            color: #333;
+            margin-top: 0;
+        }
+
+        #sidebar h3 {
+            font-size: 16px;
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        #sidebar label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: #555;
+        }
+
+        #sidebar select, #sidebar input {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+
+        #sidebar button {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-primary { background: #3b82f6; color: white; }
+        .btn-primary:hover { background: #2563eb; }
+        .btn-success { background: #10b981; color: white; }
+        .btn-success:hover { background: #059669; }
+        .btn-danger { background: #ef4444; color: white; }
+        .btn-danger:hover { background: #dc2626; }
+        .btn-purple { background: #8b5cf6; color: white; }
+        .btn-purple:hover { background: #7c3aed; }
+        .btn-gray { background: #6b7280; color: white; }
+        .btn-gray:hover { background: #4b5563; }
+        .btn-indigo { background: #6366f1; color: white; }
+        .btn-indigo:hover { background: #4f46e5; }
+
+        #canvas-container {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+        }
+
+        canvas {
+            cursor: crosshair;
+            display: block;
+        }
+
+        #properties-panel {
+            width: 320px;
+            background: white;
+            padding: 20px;
+            box-shadow: -2px 0 5px rgba(0,0,0,0.1);
+            overflow-y: auto;
+        }
+
+        .property-row {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .property-row input {
+            margin-bottom: 0;
+        }
+
+        .property-row button {
+            width: 40px;
+            margin-bottom: 0;
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+
+        .grid-3 input {
+            margin-bottom: 0;
+        }
+
+        .help-text {
+            font-size: 11px;
+            color: #666;
+            line-height: 1.5;
+            margin-top: 20px;
+        }
+
+        .help-text strong {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        #sidebar hr {
+            border: none;
+            border-top: 1px solid #e5e7eb;
+            margin: 20px 0;
+        }
+
+        #sidebar input:disabled {
+            background: #f3f4f6;
+            color: #6b7280;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .section-header h4 {
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .icon-btn {
+            width: 32px;
+            height: 32px;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav>
+            <div class="logo"><a href="../index.html" style="color: white; text-decoration: none;">← IC Portfolio</a></div>
+        </nav>
+    </header>
+
+    <main>
+        <div class="editor-container">
+            <div id="sidebar">
+                <h2>Editor GraphML</h2>
+                
+                <label>Mod:</label>
+                <select id="mode">
+                    <option value="select">Selectare</option>
+                </select>
+
+                <hr>
+                <h3 style="font-size: 14px; margin-bottom: 10px;">Adaugă Element</h3>
+                
+                <button class="btn-success" onclick="toggleAddNodeMode()" id="addNodeBtn">➕ Adaugă Nod</button>
+                <button class="btn-success" onclick="toggleAddEdgeMode()" id="addEdgeBtn">➕ Adaugă Muchie</button>
+
+                <div id="node-options" style="display: none;">
+                    <label>Tip Nod:</label>
+                    <select id="nodeType">
+                        <option value="ax">Ax</option>
+                        <option value="column">Column</option>
+                        <option value="beam">Beam</option>
+                        <option value="wall">Wall</option>
+                        <option value="slab">Slab</option>
+                        <option value="foundation">Foundation</option>
+                        <option value="window">Window</option>
+                        <option value="door">Door</option>
+                        <option value="room">Room</option>
+                        <option value="shell">Shell</option>
+                        <option value="covering">Covering</option>
+                    </select>
+                    <label style="display: flex; align-items: center; gap: 8px; margin-bottom: 15px;">
+                        <input type="checkbox" id="continuousNode" style="width: auto; margin: 0;">
+                        <span>Mod continuu</span>
+                    </label>
+                </div>
+
+                <div id="edge-options" style="display: none;">
+                    <label style="display: flex; align-items: center; gap: 8px; margin-bottom: 15px;">
+                        <input type="checkbox" id="continuousEdge" style="width: auto; margin: 0;">
+                        <span>Mod continuu</span>
+                    </label>
+                </div>
+
+                <hr>
+
+                <button class="btn-primary" onclick="zoomIn()">🔍+ Zoom In</button>
+                <button class="btn-primary" onclick="zoomOut()">🔍- Zoom Out</button>
+                <button class="btn-gray" onclick="resetView()">⟲ Reset View</button>
+
+                <div id="node-actions" style="display: none;">
+                    <hr>
+                    <button class="btn-success" onclick="copyNode()">📋 Copiază Nod</button>
+                    <button class="btn-danger" onclick="deleteSelected()">🗑️ Șterge Nod</button>
+                </div>
+
+                <div id="edge-actions" style="display: none;">
+                    <hr>
+                    <button class="btn-purple" onclick="insertNodeOnEdge()">➕ Inserează Nod</button>
+                    <button class="btn-danger" onclick="deleteSelected()">🗑️ Șterge Muchie</button>
+                </div>
+
+                <hr>
+                <button class="btn-indigo" onclick="exportGraphML()">💾 Export GraphML</button>
+                <button class="btn-gray" onclick="document.getElementById('fileInput').click()">📂 Import GraphML</button>
+                <input type="file" id="fileInput" accept=".graphml,.xml" style="display: none;" onchange="importGraphML(event)">
+
+                <div class="help-text">
+                    <strong>Ajutor:</strong>
+                    • Click pe nod pentru selectare<br>
+                    • Drag pentru a muta noduri<br>
+                    • Shift+Click pentru pan<br>
+                    • Scroll pentru zoom<br>
+                    • Click pe muchie pentru selectare
+                </div>
+            </div>
+
+            <div id="canvas-container">
+                <canvas id="canvas"></canvas>
+            </div>
+
+            <div id="properties-panel" style="display: none;">
+                <h3>Proprietăți Nod</h3>
+                <div id="properties-content"></div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // State
+        let nodes = [
+            { id: 1, type: 'ax', name: '1', x: 100, y: 100, z: 0, properties: {has_column: 'True', column_type: "C25x25"} },
+            { id: 2, type: 'wall', name: 'W25', x: 200, y: 100, z: 0, properties: { material: 'Beton C30/37', dimensiuni: '30x60cm', has_beam: 'True', beam_type: "C25x25" } },
+            { id: 3, type: 'ax', name: '2', x: 300, y: 100, z: 0, properties: {has_column: 'True', column_type: "C25x25"} },
+            { id: 4, type: 'window', name: 'wd120x120', x: 100, y: 200, z: 0, properties: {offset: 1.0, sill_height: 0.90} },
+            { id: 5, type: 'door', name: 'd90x210', x: 200, y: 200, z: 0, properties: {offset: 1.0, sill_height: 0.90} },
+            { id: 6, type: 'room', name: 'room', x: 300, y: 200, z: 0, properties: {name:'Room', height: 0.90} },
+        ];
+        let edges = [
+            { id: 1, source: 1, target: 2 },
+            { id: 2, source: 2, target: 3 }
+        ];
+        let selectedNode = null;
+        let selectedEdge = null;
+        let dragging = null;
+        let pan = { x: 0, y: 0 };
+        let zoom = 1;
+        let isPanning = false;
+        let panStart = { x: 0, y: 0 };
+        let mode = 'select';
+        let edgeStart = null;
+        let lastMousePos = { x: 0, y: 0 };
+
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+
+        const nodeColors = {
+            column: '#3b82f6',
+            ax: '#64748b',
+            beam: '#10b981',
+            wall: '#f59e0b',
+            slab: '#8b5cf6',
+            foundation: '#ef4444',
+            window: '#0ea5e9',
+            door: '#f97316',
+            room: '#14b8a6',
+            shell: '#a855f7',
+            covering: '#f43f5e'
+        };
+
+        // Setup canvas
+        function resizeCanvas() {
+            canvas.width = canvas.parentElement.clientWidth;
+            canvas.height = canvas.parentElement.clientHeight;
+            draw();
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        // Mode selector
+        document.getElementById('mode').addEventListener('change', (e) => {
+            mode = e.target.value;
+            edgeStart = null;
+            document.getElementById('node-options').style.display = 'none';
+            document.getElementById('edge-options').style.display = 'none';
+            updateButtonStates();
+            draw();
+        });
+
+        function toggleAddNodeMode() {
+            if (mode === 'addNode') {
+                mode = 'select';
+                document.getElementById('mode').value = 'select';
+            } else {
+                mode = 'addNode';
+                edgeStart = null;
+            }
+            document.getElementById('node-options').style.display = mode === 'addNode' ? 'block' : 'none';
+            document.getElementById('edge-options').style.display = 'none';
+            updateButtonStates();
+            draw();
+        }
+
+        function toggleAddEdgeMode() {
+            if (mode === 'addEdge') {
+                mode = 'select';
+                document.getElementById('mode').value = 'select';
+            } else {
+                mode = 'addEdge';
+                edgeStart = null;
+            }
+            document.getElementById('node-options').style.display = 'none';
+            document.getElementById('edge-options').style.display = mode === 'addEdge' ? 'block' : 'none';
+            updateButtonStates();
+            draw();
+        }
+
+        function updateButtonStates() {
+            const addNodeBtn = document.getElementById('addNodeBtn');
+            const addEdgeBtn = document.getElementById('addEdgeBtn');
+            
+            addNodeBtn.style.background = mode === 'addNode' ? '#059669' : '';
+            addEdgeBtn.style.background = mode === 'addEdge' ? '#059669' : '';
+            
+            if (mode === 'addNode') {
+                addNodeBtn.classList.remove('btn-success');
+                addNodeBtn.classList.add('btn-success');
+            } else {
+                addNodeBtn.classList.remove('btn-success');
+                addNodeBtn.classList.add('btn-success');
+            }
+            
+            if (mode === 'addEdge') {
+                addEdgeBtn.classList.remove('btn-success');
+                addEdgeBtn.classList.add('btn-success');
+            } else {
+                addEdgeBtn.classList.remove('btn-success');
+                addEdgeBtn.classList.add('btn-success');
+            }
+        }
+
+        // Utility functions
+        function getNodeAtPosition(x, y) {
+            const canvasX = (x - pan.x) / zoom;
+            const canvasY = (y - pan.y) / zoom;
+            return nodes.find(node => {
+                const dx = node.x - canvasX;
+                const dy = node.y - canvasY;
+                return Math.sqrt(dx * dx + dy * dy) < 20;
+            });
+        }
+
+        function getEdgeAtPosition(x, y) {
+            const canvasX = (x - pan.x) / zoom;
+            const canvasY = (y - pan.y) / zoom;
+            const threshold = 10;
+            
+            return edges.find(edge => {
+                const sourceNode = nodes.find(n => n.id === edge.source);
+                const targetNode = nodes.find(n => n.id === edge.target);
+                if (!sourceNode || !targetNode) return false;
+                
+                const dist = pointToLineDistance(
+                    canvasX, canvasY,
+                    sourceNode.x, sourceNode.y,
+                    targetNode.x, targetNode.y
+                );
+                return dist < threshold;
+            });
+        }
+
+        function pointToLineDistance(px, py, x1, y1, x2, y2) {
+            const A = px - x1;
+            const B = py - y1;
+            const C = x2 - x1;
+            const D = y2 - y1;
+            const dot = A * C + B * D;
+            const lenSq = C * C + D * D;
+            let param = -1;
+            if (lenSq !== 0) param = dot / lenSq;
+            
+            let xx, yy;
+            if (param < 0) {
+                xx = x1;
+                yy = y1;
+            } else if (param > 1) {
+                xx = x2;
+                yy = y2;
+            } else {
+                xx = x1 + param * C;
+                yy = y1 + param * D;
+            }
+            
+            const dx = px - xx;
+            const dy = py - yy;
+            return Math.sqrt(dx * dx + dy * dy);
+        }
+
+        // Drawing
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            ctx.save();
+            ctx.translate(pan.x, pan.y);
+            ctx.scale(zoom, zoom);
+            
+            // Draw edges
+            edges.forEach(edge => {
+                const sourceNode = nodes.find(n => n.id === edge.source);
+                const targetNode = nodes.find(n => n.id === edge.target);
+                if (!sourceNode || !targetNode) return;
+                
+                ctx.beginPath();
+                ctx.moveTo(sourceNode.x, sourceNode.y);
+                ctx.lineTo(targetNode.x, targetNode.y);
+                ctx.strokeStyle = selectedEdge === edge.id ? '#ef4444' : '#6b7280';
+                ctx.lineWidth = selectedEdge === edge.id ? 3 : 2;
+                ctx.stroke();
+            });
+            
+            // Draw edge preview
+            if (mode === 'addEdge' && edgeStart) {
+                const startNode = nodes.find(n => n.id === edgeStart);
+                if (startNode) {
+                    ctx.beginPath();
+                    ctx.moveTo(startNode.x, startNode.y);
+                    ctx.lineTo((lastMousePos.x - pan.x) / zoom, (lastMousePos.y - pan.y) / zoom);
+                    ctx.strokeStyle = '#3b82f6';
+                    ctx.lineWidth = 2;
+                    ctx.setLineDash([5, 5]);
+                    ctx.stroke();
+                    ctx.setLineDash([]);
+                }
+            }
+            
+            // Draw nodes
+            nodes.forEach(node => {
+                ctx.beginPath();
+                ctx.arc(node.x, node.y, 20, 0, Math.PI * 2);
+                ctx.fillStyle = nodeColors[node.type] || '#6b7280';
+                ctx.fill();
+                
+                if (selectedNode === node.id) {
+                    ctx.strokeStyle = '#ef4444';
+                    ctx.lineWidth = 3;
+                    ctx.stroke();
+                }
+                
+                ctx.fillStyle = '#ffffff';
+                ctx.font = '12px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(node.name, node.x, node.y);
+            });
+            
+            ctx.restore();
+        }
+
+        // Mouse events
+        canvas.addEventListener('mousedown', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+
+            if (e.button === 1 || (e.button === 0 && e.shiftKey)) {
+                isPanning = true;
+                panStart = { x: e.clientX - pan.x, y: e.clientY - pan.y };
+                return;
+            }
+
+            if (mode === 'addNode') {
+                const canvasX = (x - pan.x) / zoom;
+                const canvasY = (y - pan.y) / zoom;
+                const nodeType = document.getElementById('nodeType').value;
+                const newNode = {
+                    id: Math.max(...nodes.map(n => n.id), 0) + 1,
+                    type: nodeType,
+                    name: `${nodeType[0].toUpperCase()}${nodes.length + 1}`,
+                    x: canvasX,
+                    y: canvasY,
+                    z: 0,
+                    properties: {}
+                };
+                nodes.push(newNode);
+                const isContinuous = document.getElementById('continuousNode').checked;
+                if (!isContinuous) {
+                    document.getElementById('mode').value = 'select';
+                    mode = 'select';
+                    document.getElementById('node-options').style.display = 'none';
+                    updateButtonStates();
+                }
+                draw();
+                return;
+            }
+
+            if (mode === 'addEdge') {
+                const node = getNodeAtPosition(x, y);
+                if (node) {
+                    if (!edgeStart) {
+                        edgeStart = node.id;
+                    } else if (edgeStart !== node.id) {
+                        const newEdge = {
+                            id: Math.max(...edges.map(e => e.id), 0) + 1,
+                            source: edgeStart,
+                            target: node.id
+                        };
+                        edges.push(newEdge);
+                        const isContinuous = document.getElementById('continuousEdge').checked;
+                        if (!isContinuous) {
+                            edgeStart = null;
+                            document.getElementById('mode').value = 'select';
+                            mode = 'select';
+                        } else {
+                            edgeStart = null;
+                        }
+                    }
+                    draw();
+                }
+                return;
+            }
+
+            const clickedNode = getNodeAtPosition(x, y);
+            if (clickedNode) {
+                selectedNode = clickedNode.id;
+                selectedEdge = null;
+                dragging = { 
+                    nodeId: clickedNode.id, 
+                    offsetX: x - clickedNode.x * zoom - pan.x, 
+                    offsetY: y - clickedNode.y * zoom - pan.y 
+                };
+                updateUI();
+                draw();
+            } else {
+                const clickedEdge = getEdgeAtPosition(x, y);
+                if (clickedEdge) {
+                    selectedEdge = clickedEdge.id;
+                    selectedNode = null;
+                    updateUI();
+                    draw();
+                } else {
+                    selectedNode = null;
+                    selectedEdge = null;
+                    updateUI();
+                    draw();
+                }
+            }
+        });
+
+        canvas.addEventListener('mousemove', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            lastMousePos = { x, y };
+
+            if (isPanning) {
+                pan = {
+                    x: e.clientX - panStart.x,
+                    y: e.clientY - panStart.y
+                };
+                draw();
+                return;
+            }
+
+            if (dragging) {
+                const newX = (x - pan.x - dragging.offsetX) / zoom;
+                const newY = (y - pan.y - dragging.offsetY) / zoom;
+                
+                const node = nodes.find(n => n.id === dragging.nodeId);
+                if (node) {
+                    node.x = newX;
+                    node.y = newY;
+                    updatePropertiesPanel();
+                    draw();
+                }
+            }
+
+            if (mode === 'addEdge' && edgeStart) {
+                draw();
+            }
+        });
+
+        canvas.addEventListener('mouseup', () => {
+            dragging = null;
+            isPanning = false;
+        });
+
+        canvas.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            const delta = e.deltaY > 0 ? 0.9 : 1.1;
+            zoom = Math.max(0.1, Math.min(3, zoom * delta));
+            draw();
+        });
+
+        // UI Actions
+        function zoomIn() {
+            zoom = Math.min(3, zoom * 1.2);
+            draw();
+        }
+
+        function zoomOut() {
+            zoom = Math.max(0.1, zoom * 0.8);
+            draw();
+        }
+
+        function resetView() {
+            pan = { x: 0, y: 0 };
+            zoom = 1;
+            draw();
+        }
+
+        function insertNodeOnEdge() {
+            if (!selectedEdge) return;
+            
+            const edge = edges.find(e => e.id === selectedEdge);
+            const sourceNode = nodes.find(n => n.id === edge.source);
+            const targetNode = nodes.find(n => n.id === edge.target);
+            
+            const newNode = {
+                id: Math.max(...nodes.map(n => n.id), 0) + 1,
+                type: 'wall',
+                name: `W${nodes.length + 1}`,
+                x: (sourceNode.x + targetNode.x) / 2,
+                y: (sourceNode.y + targetNode.y) / 2,
+                z: 0,
+                properties: { material: 'Beton C30/37', dimensiuni: '30x60cm', has_beam: 'True', beam_type: "C25x25" }
+            };
+            
+            edges = edges.filter(e => e.id !== selectedEdge);
+            edges.push({
+                id: Math.max(...edges.map(e => e.id), 0) + 1,
+                source: edge.source,
+                target: newNode.id
+            });
+            edges.push({
+                id: Math.max(...edges.map(e => e.id), 0) + 2,
+                source: newNode.id,
+                target: edge.target
+            });
+            
+            nodes.push(newNode);
+            selectedEdge = null;
+            selectedNode = newNode.id;
+            updateUI();
+            draw();
+        }
+
+        function deleteSelected() {
+            if (selectedNode) {
+                nodes = nodes.filter(n => n.id !== selectedNode);
+                edges = edges.filter(e => e.source !== selectedNode && e.target !== selectedNode);
+                selectedNode = null;
+            } else if (selectedEdge) {
+                edges = edges.filter(e => e.id !== selectedEdge);
+                selectedEdge = null;
+            }
+            updateUI();
+            draw();
+        }
+
+        function copyNode() {
+            if (!selectedNode) return;
+            const node = nodes.find(n => n.id === selectedNode);
+            const newNode = {
+                ...node,
+                id: Math.max(...nodes.map(n => n.id), 0) + 1,
+                name: `${node.name}_copy`,
+                x: node.x + 50,
+                y: node.y + 50,
+                properties: { ...node.properties }
+            };
+            nodes.push(newNode);
+            selectedNode = newNode.id;
+            updateUI();
+            draw();
+        }
+
+        function updateUI() {
+            document.getElementById('node-actions').style.display = selectedNode ? 'block' : 'none';
+            document.getElementById('edge-actions').style.display = selectedEdge ? 'block' : 'none';
+            document.getElementById('properties-panel').style.display = selectedNode ? 'block' : 'none';
+            
+            if (selectedNode) {
+                updatePropertiesPanel();
+            }
+        }
+
+        function updatePropertiesPanel() {
+            const node = nodes.find(n => n.id === selectedNode);
+            if (!node) return;
+            
+            const html = `
+                <label>ID:</label>
+                <input type="text" value="${node.id}" disabled>
+                
+                <label>Tip:</label>
+                <select id="prop-type" onchange="updateNodeField('type', this.value)">
+                    <option value="column" ${node.type === 'column' ? 'selected' : ''}>Column</option>
+                    <option value="ax" ${node.type === 'ax' ? 'selected' : ''}>Ax</option>
+                    <option value="beam" ${node.type === 'beam' ? 'selected' : ''}>Beam</option>
+                    <option value="wall" ${node.type === 'wall' ? 'selected' : ''}>Wall</option>
+                    <option value="slab" ${node.type === 'slab' ? 'selected' : ''}>Slab</option>
+                    <option value="foundation" ${node.type === 'foundation' ? 'selected' : ''}>Foundation</option>
+                    <option value="window" ${node.type === 'window' ? 'selected' : ''}>Window</option>
+                    <option value="door" ${node.type === 'door' ? 'selected' : ''}>Door</option>
+                    <option value="room" ${node.type === 'room' ? 'selected' : ''}>Room</option>
+                    <option value="shell" ${node.type === 'shell' ? 'selected' : ''}>Shell</option>
+                    <option value="covering" ${node.type === 'covering' ? 'selected' : ''}>Covering</option>
+                </select>
+                
+                <label>Nume:</label>
+                <input type="text" value="${node.name}" onchange="updateNodeField('name', this.value)">
+                
+                <div class="grid-3">
+                    <div>
+                        <label>X:</label>
+                        <input type="number" value="${Math.round(node.x)}" onchange="updateNodeField('x', parseFloat(this.value))">
+                    </div>
+                    <div>
+                        <label>Y:</label>
+                        <input type="number" value="${Math.round(node.y)}" onchange="updateNodeField('y', parseFloat(this.value))">
+                    </div>
+                    <div>
+                        <label>Z:</label>
+                        <input type="number" value="${node.z}" onchange="updateNodeField('z', parseFloat(this.value))">
+                    </div>
+                </div>
+                
+                <hr>
+                
+                <div class="section-header">
+                    <h4>Proprietăți Custom</h4>
+                    <button class="btn-success icon-btn" onclick="addProperty()">+</button>
+                </div>
+                
+${Object.entries(node.properties).map(function([key, value]) {
+                    const escapedKey = key.replace(/'/g, "\\'");
+                    const escapedValue = String(value).replace(/"/g, '&quot;');
+                    return '<div class="property-row"><input type="text" value="' + escapedKey + '" disabled style="background: #f3f4f6;"><input type="text" value="' + escapedValue + '" onchange="updateProperty(\'' + escapedKey + '\', this.value)"><button class="btn-danger" onclick="deleteProperty(\'' + escapedKey + '\')">🗑️</button></div>';
+                }).join('')}
+            `;
+            
+            document.getElementById('properties-content').innerHTML = html;
+        }
+
+        function updateNodeField(field, value) {
+            const node = nodes.find(n => n.id === selectedNode);
+            if (node) {
+                node[field] = value;
+                draw();
+            }
+        }
+
+        function updateProperty(key, value) {
+            const node = nodes.find(n => n.id === selectedNode);
+            if (node) {
+                node.properties[key] = value;
+            }
+        }
+
+        function addProperty() {
+            const key = prompt('Nume proprietate:');
+            if (key) {
+                const node = nodes.find(n => n.id === selectedNode);
+                if (node) {
+                    node.properties[key] = '';
+                    updatePropertiesPanel();
+                }
+            }
+        }
+
+        function deleteProperty(key) {
+            const node = nodes.find(n => n.id === selectedNode);
+            if (node) {
+                delete node.properties[key];
+                updatePropertiesPanel();
+            }
+        }
+
+        // Export/Import
+        function exportGraphML() {
+            let xml = '<?xml version="1.0" encoding="UTF-8"?>\n';
+            xml += '<graphml xmlns="http://graphml.graphdrawing.org/xmlns">\n';
+            xml += '  <graph id="G" edgedefault="undirected">\n';
+            
+            nodes.forEach(node => {
+                xml += `    <node id="${node.id}">\n`;
+                xml += `      <data key="type">${node.type}</data>\n`;
+                xml += `      <data key="name">${node.name}</data>\n`;
+                xml += `      <data key="x">${node.x}</data>\n`;
+                xml += `      <data key="y">${node.y}</data>\n`;
+                xml += `      <data key="z">${node.z}</data>\n`;
+                Object.entries(node.properties).forEach(([key, value]) => {
+                    xml += `      <data key="${key}">${value}</data>\n`;
+                });
+                xml += '    </node>\n';
+            });
+            
+            edges.forEach(edge => {
+                xml += `    <edge id="${edge.id}" source="${edge.source}" target="${edge.target}"/>\n`;
+            });
+            
+            xml += '  </graph>\n</graphml>';
+            
+            const blob = new Blob([xml], { type: 'application/xml' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'construction.graphml';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function importGraphML(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const parser = new DOMParser();
+                    const xmlDoc = parser.parseFromString(e.target.result, 'text/xml');
+                    
+                    const newNodes = [];
+                    const nodeElements = xmlDoc.getElementsByTagName('node');
+                    for (let i = 0; i < nodeElements.length; i++) {
+                        const nodeEl = nodeElements[i];
+                        const id = parseInt(nodeEl.getAttribute('id'));
+                        const dataElements = nodeEl.getElementsByTagName('data');
+                        const node = { id, properties: {} };
+                        
+                        for (let j = 0; j < dataElements.length; j++) {
+                            const dataEl = dataElements[j];
+                            const key = dataEl.getAttribute('key');
+                            const value = dataEl.textContent;
+                            
+                            if (key === 'type') node.type = value;
+                            else if (key === 'name') node.name = value;
+                            else if (key === 'x') node.x = parseFloat(value);
+                            else if (key === 'y') node.y = parseFloat(value);
+                            else if (key === 'z') node.z = parseFloat(value);
+                            else node.properties[key] = value;
+                        }
+                        
+                        newNodes.push(node);
+                    }
+                    
+                    const newEdges = [];
+                    const edgeElements = xmlDoc.getElementsByTagName('edge');
+                    for (let i = 0; i < edgeElements.length; i++) {
+                        const edgeEl = edgeElements[i];
+                        newEdges.push({
+                            id: parseInt(edgeEl.getAttribute('id')),
+                            source: parseInt(edgeEl.getAttribute('source')),
+                            target: parseInt(edgeEl.getAttribute('target'))
+                        });
+                    }
+                    
+                    nodes = newNodes;
+                    edges = newEdges;
+                    selectedNode = null;
+                    selectedEdge = null;
+                    updateUI();
+                    draw();
+                    
+                    alert('GraphML importat cu succes!');
+                } catch (error) {
+                    alert('Eroare la importul GraphML: ' + error.message);
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        // Initial draw
+        draw();
+    </script>
+</body>
+</html>
