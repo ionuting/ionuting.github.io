@@ -1,16 +1,24 @@
 <!DOCTYPE html>
-<html lang="ro">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Editor GraphML pentru Construcții</title>
+    <title>GraphML Editor for Construction</title>
     <link rel="stylesheet" href="../assets/css/style.css">
     <style>
+
+        html, body, main {
+            width: 100vw;
+            min-width: 0;
+            overflow-x: hidden;
+        }
         body {
             font-family: Arial, sans-serif;
             display: flex;
             height: 100vh;
             background: #f5f5f5;
+            margin: 0;
+            padding: 0;
         }
 
         main {
@@ -24,13 +32,17 @@
         .editor-container {
             display: flex;
             flex: 1;
+            width: 100vw;
             height: calc(100vh - 60px);
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
 
         #sidebar {
-            width: 260px;
+            width: 156px;
             background: white;
-            padding: 20px;
+            padding: 12px;
             box-shadow: 2px 0 5px rgba(0,0,0,0.1);
             overflow-y: auto;
         }
@@ -106,36 +118,117 @@
 
         #properties-panel {
             width: 320px;
-            background: white;
-            padding: 20px;
-            box-shadow: -2px 0 5px rgba(0,0,0,0.1);
+            background: linear-gradient(135deg, #f8f9ff 0%, #f0f4ff 100%);
+            padding: 0;
+            margin: 0;
+            box-shadow: -2px 0 15px rgba(102, 126, 234, 0.15);
             overflow-y: auto;
+            border-left: 4px solid #667eea;
+            align-self: stretch;
+            flex-shrink: 0;
+            min-height: calc(100vh - 60px);
+        }
+
+        #properties-panel h3 {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            margin: 0;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        #properties-content {
+            padding: 20px;
         }
 
         .property-row {
             display: flex;
             gap: 8px;
-            margin-bottom: 10px;
+            margin-bottom: 12px;
+            align-items: center;
         }
 
         .property-row input {
             margin-bottom: 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 8px;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+
+        .property-row input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .property-row input:disabled {
+            background: #e8ecff;
+            color: #667eea;
+            font-weight: 500;
         }
 
         .property-row button {
-            width: 40px;
+            width: 36px;
+            height: 36px;
             margin-bottom: 0;
+            padding: 0;
+            flex-shrink: 0;
+            font-size: 14px;
+        }
+
+        #properties-panel label {
+            display: block;
+            font-size: 12px;
+            font-weight: 700;
+            margin-bottom: 6px;
+            color: #333;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        #properties-panel select {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 13px;
+            background: white;
+            transition: all 0.2s;
+        }
+
+        #properties-panel select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
         }
 
         .grid-3 {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 8px;
+            grid-template-columns: 1fr;
+            gap: 10px;
             margin-bottom: 15px;
+            padding: 12px;
+            background: white;
+            border-radius: 6px;
+        }
+
+        .grid-3 div {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .grid-3 label {
+            margin-bottom: 6px;
         }
 
         .grid-3 input {
-            margin-bottom: 0;
+            margin-bottom: 0 !important;
+            width: 80% !important;
+            max-width: 160px;
         }
 
         .help-text {
@@ -156,6 +249,12 @@
             margin: 20px 0;
         }
 
+        #properties-panel hr {
+            border: none;
+            border-top: 2px solid #e0e7ff;
+            margin: 20px 0;
+        }
+
         #sidebar input:disabled {
             background: #f3f4f6;
             color: #6b7280;
@@ -173,6 +272,23 @@
             font-weight: 600;
         }
 
+        #properties-panel .section-header {
+            background: #f0f4ff;
+            padding: 12px;
+            margin: 15px -20px 10px -20px;
+            margin-left: 0;
+            margin-right: 0;
+            border-radius: 4px;
+        }
+
+        #properties-panel .section-header h4 {
+            color: #667eea;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin: 0;
+        }
+
         .icon-btn {
             width: 32px;
             height: 32px;
@@ -187,28 +303,30 @@
 <body>
     <header>
         <nav>
-            <div class="logo"><a href="../index.html" style="color: white; text-decoration: none;">← IC Portfolio</a></div>
+            <div class="logo" style="font-size: 1.1em; line-height: 1;">
+                <a href="../index.html" style="color: white; text-decoration: none; font-size: 1.1em; display: inline-block; transform: scale(0.5); transform-origin: left center;">←</a>
+            </div>
         </nav>
     </header>
 
     <main>
         <div class="editor-container">
-            <div id="sidebar">
-                <h2>Editor GraphML</h2>
+            <div id="sidebar" style="min-width: 0;">
+                <h2>GraphML Editor</h2>
                 
-                <label>Mod:</label>
+                <label>Mode:</label>
                 <select id="mode">
-                    <option value="select">Selectare</option>
+                    <option value="select">Select</option>
                 </select>
 
                 <hr>
-                <h3 style="font-size: 14px; margin-bottom: 10px;">Adaugă Element</h3>
+                <h3 style="font-size: 14px; margin-bottom: 10px;">Add Element</h3>
                 
-                <button class="btn-success" onclick="toggleAddNodeMode()" id="addNodeBtn">➕ Adaugă Nod</button>
-                <button class="btn-success" onclick="toggleAddEdgeMode()" id="addEdgeBtn">➕ Adaugă Muchie</button>
+                <button class="btn-success" onclick="toggleAddNodeMode()" id="addNodeBtn">➕ Add Node</button>
+                <button class="btn-success" onclick="toggleAddEdgeMode()" id="addEdgeBtn">➕ Add Edge</button>
 
                 <div id="node-options" style="display: none;">
-                    <label>Tip Nod:</label>
+                    <label>Node Type:</label>
                     <select id="nodeType">
                         <option value="ax">Ax</option>
                         <option value="column">Column</option>
@@ -224,14 +342,14 @@
                     </select>
                     <label style="display: flex; align-items: center; gap: 8px; margin-bottom: 15px;">
                         <input type="checkbox" id="continuousNode" style="width: auto; margin: 0;">
-                        <span>Mod continuu</span>
+                        <span>Continuous Mode</span>
                     </label>
                 </div>
 
                 <div id="edge-options" style="display: none;">
                     <label style="display: flex; align-items: center; gap: 8px; margin-bottom: 15px;">
                         <input type="checkbox" id="continuousEdge" style="width: auto; margin: 0;">
-                        <span>Mod continuu</span>
+                        <span>Continuous Mode</span>
                     </label>
                 </div>
 
@@ -243,14 +361,14 @@
 
                 <div id="node-actions" style="display: none;">
                     <hr>
-                    <button class="btn-success" onclick="copyNode()">📋 Copiază Nod</button>
-                    <button class="btn-danger" onclick="deleteSelected()">🗑️ Șterge Nod</button>
+                    <button class="btn-success" onclick="copyNode()">📋 Copy Node</button>
+                    <button class="btn-danger" onclick="deleteSelected()">🗑️ Delete Node</button>
                 </div>
 
                 <div id="edge-actions" style="display: none;">
                     <hr>
-                    <button class="btn-purple" onclick="insertNodeOnEdge()">➕ Inserează Nod</button>
-                    <button class="btn-danger" onclick="deleteSelected()">🗑️ Șterge Muchie</button>
+                    <button class="btn-purple" onclick="insertNodeOnEdge()">➕ Insert Node</button>
+                    <button class="btn-danger" onclick="deleteSelected()">🗑️ Delete Edge</button>
                 </div>
 
                 <hr>
@@ -259,12 +377,12 @@
                 <input type="file" id="fileInput" accept=".graphml,.xml" style="display: none;" onchange="importGraphML(event)">
 
                 <div class="help-text">
-                    <strong>Ajutor:</strong>
-                    • Click pe nod pentru selectare<br>
-                    • Drag pentru a muta noduri<br>
-                    • Shift+Click pentru pan<br>
-                    • Scroll pentru zoom<br>
-                    • Click pe muchie pentru selectare
+                    <strong>Help:</strong>
+                    • Click on node to select<br>
+                    • Drag to move nodes<br>
+                    • Shift+Click to pan<br>
+                    • Scroll to zoom<br>
+                    • Click on edge to select
                 </div>
             </div>
 
@@ -272,8 +390,8 @@
                 <canvas id="canvas"></canvas>
             </div>
 
-            <div id="properties-panel" style="display: none;">
-                <h3>Proprietăți Nod</h3>
+            <div id="properties-panel" style="align-self: stretch;">
+                <h3>Node properties</h3>
                 <div id="properties-content"></div>
             </div>
         </div>
@@ -639,8 +757,20 @@
 
         canvas.addEventListener('wheel', (e) => {
             e.preventDefault();
+            // Get mouse position relative to canvas
+            const rect = canvas.getBoundingClientRect();
+            const mouseX = e.clientX - rect.left;
+            const mouseY = e.clientY - rect.top;
+            // Convert mouse position to world coordinates
+            const worldX = (mouseX - pan.x) / zoom;
+            const worldY = (mouseY - pan.y) / zoom;
+            // Compute new zoom
             const delta = e.deltaY > 0 ? 0.9 : 1.1;
-            zoom = Math.max(0.1, Math.min(3, zoom * delta));
+            const newZoom = Math.max(0.1, Math.min(3, zoom * delta));
+            // Adjust pan so that the world point under the mouse stays under the mouse
+            pan.x = mouseX - worldX * newZoom;
+            pan.y = mouseY - worldY * newZoom;
+            zoom = newZoom;
             draw();
         });
 
@@ -760,7 +890,7 @@
                     <option value="covering" ${node.type === 'covering' ? 'selected' : ''}>Covering</option>
                 </select>
                 
-                <label>Nume:</label>
+                <label>Name:</label>
                 <input type="text" value="${node.name}" onchange="updateNodeField('name', this.value)">
                 
                 <div class="grid-3">
@@ -781,7 +911,7 @@
                 <hr>
                 
                 <div class="section-header">
-                    <h4>Proprietăți Custom</h4>
+                    <h4>Custom Properties</h4>
                     <button class="btn-success icon-btn" onclick="addProperty()">+</button>
                 </div>
                 
